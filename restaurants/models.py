@@ -1,4 +1,5 @@
 from django.db import models
+from django.urls import reverse
 from django.contrib.auth.models import User
 
 class Restaurant(models.Model):
@@ -12,9 +13,16 @@ class Restaurant(models.Model):
 	def __str__(self):
 		return self.name
 
+	def get_absolute_url(self):
+		return reverse('restaurant-detail',kwargs={'restaurant_id':self.id})
+
 
 class Item(models.Model):
 	name  = models.CharField(max_length=120)
 	description = models.TextField()
 	price = models.FloatField()
-	restaurant = models.OneToOneField(User, on_delete=models.CASCADE)
+	restaurant = models.ForeignKey(Restaurant, on_delete=models.CASCADE)
+
+	def __str__(self):
+		return self.name
+

@@ -12,7 +12,6 @@ def signup(request):
 
 			user.set_password(user.password)
 			user.save()
-
 			login(request, user)
 			return redirect("restaurant-list")
 	context = {
@@ -50,8 +49,10 @@ def restaurant_list(request):
 
 
 def restaurant_detail(request, restaurant_id):
+	restaurant_obj = Restaurant.objects.get(id=restaurant_id)
 	context = {
-		"restaurant": Restaurant.objects.get(id=restaurant_id)
+		"restaurant": restaurant_obj,
+		"items": Item.objects.filter(restaurant = restaurant_obj),
 	}
 	return render(request, 'detail.html', context)
 
@@ -61,9 +62,8 @@ def restaurant_create(request):
 		form = RestaurantForm(request.POST, request.FILES)
 		if form.is_valid():
 			restaurant = form.save(commit = False)
-			restaurant.owner = request.owner
+			restaurant.owner = request.user
 			restaurant.save()
-			messages.success(request, "Restaurant Has Been Created!")
 			return redirect('restaurant-list')
 	context = {
 		"form":form,
@@ -74,12 +74,13 @@ def item_create(request, restaurant_id):
 	form = ItemForm()
 	restaurant_obj = Restaurant.objects.get(id=restaurant_id)
 	if request.method == "POST":
-		form = ItemForm(request.POST, instance=restaurant_obj)
+		form = ItemForm(request.POST)
 		if form.is_valid():
-			restaurant = form.save(commit = False)
-			restaurant.user = request.user
-			restaurant.save()
-			return redirect('restaurant-detail', restaurant_obj)
+			item = form.save(commit = False)
+			item.restaurant = restaurant_obj
+			item.save()
+			return redirect(restaurant_obj)
+		print(form.errors)
 	context = {
 		"restaurant": restaurant_obj,
 		"form":form,
